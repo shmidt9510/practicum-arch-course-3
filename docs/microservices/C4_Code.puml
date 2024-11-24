@@ -1,0 +1,70 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+
+interface IQueueConsumer{
+    +consume(message:string):bool
+}
+interface IQueueProducer{
+    +produce(message:string):bool
+}
+
+class UserService {
+    + Register(UserData: UserData): uuid
+    + Login(userId: uuid, password: string): bool
+}
+
+class HouseService {
+    + CreateHouse(houseData: HouseData): uuid
+    + GetUserHouse(userId: uuid): uuid
+    + InstallModule(moduleData: ModuleData): bool
+}
+
+class DeviceService {
+    + RegisterInHub(hubAdress: string): bool
+    + SendData(): bool
+    + Execute(externalCommand: Command): bool
+    + Fallback(): bool
+}
+
+class NotifictionService {
+    + SendNotification(message: string, userId: uuid, destination: string): bool
+}
+
+class DeviceRegistrationService {
+    + RegisterDevice(deviceId: uuid): bool
+    + AddDeviceType(deviceData: DeviceData): bool
+}
+
+class UserRepository {
+  + Create(user: NewUserIn): void
+  + GetByUsername(username: string): UserDtoSchema
+  + Update(user: NewUserIn): void
+  + GetRequiredById(id: uint): UserDtoSchema
+}
+
+class TelemetryService {
+    + RecieveData(data: string): bool
+    + VisualizeData(userId: uuid, type: string): bool
+}
+
+IQueueConsumer ..|> TelemetryService
+IQueueConsumer ..|> NotifictionService
+
+
+IQueueProducer ..|> DeviceService
+IQueueProducer ..|> HouseService
+
+HouseService o-- "0..*" DeviceService
+UserService o-- HouseService
+
+DeviceService ..> DeviceRegistrationService: depends on
+HouseService ..> DeviceRegistrationService: depends on
+
+UserRepository o-- "0..*" HouseService
+HouseService --> NotifictionService
+NotifictionService o-- UserService
+
+HouseService o-- TelemetryService
+
+@enduml

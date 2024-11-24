@@ -1,0 +1,71 @@
+@startuml
+
+title Диаграмма контейнеров
+
+top to bottom direction
+skinparam linetype ortho
+
+!include <C4/C4_Component>
+
+Person(client, "Клиент")
+Person(support, "Поддержка")
+System_Boundary(house, "Дом") {
+    System_Ext(device, "Устройство{Name}")
+}
+System_Ext(notExt, "Нотификации")
+System_Boundary(smartHome, "Система управления умным домом") #LightGrey  {
+    Container(gateway, "UserAPI Gateway")
+    Container(deviceGateway, "DeviceAPI Gateway")
+    Container(supportGateway, "SupportAPI Gateway")
+    ContainerQueue(commandQueue, "Очередь управления")
+    ContainerQueue(telemetryQueue, "Очередь сбора телеметрии")
+    ContainerQueue(notificationsQueue, "Очередь для нотификаций")
+
+    Container_Boundary(k8s, "Динамическое управление k8s")#LightBlue {
+        Container(userService, "Сервис управления пользователями")
+        Container(houseService, "Сервис управления домами")
+        Container(notificationService, "Сервис нотификаций")
+        Container(registrationService, "Сервис регистрации устройства")
+        Container(deviceService, "Сервис управления устройством {Name}")
+        Container(telemetryService, "Сервис телеметрии устройства {Name}")
+        Container(adminService, "Сервис админского управления устройством {Name}")
+    }
+    Container_Boundary(dbBoundary,  "Хранение данных")#LightGreen {
+        ContainerDb(userDb, "База данных пользователей")
+        ContainerDb(deviceParametersDb, "База данных возможностей устройств")
+        ContainerDb(houseDb, "База данных домов")
+        ContainerDb(notificationsDB, "База отправленных нотификаций")
+        ContainerDb(deviceDB, "Специализированная база данных для устройства {NAME}")
+        ContainerDb(telemetryDb, "База данных телеметрии", "OLAP")
+    }
+}
+
+Rel(client, gateway, "Регистрация, авторизация, управление домом (подключение, использование)")
+Rel(support, supportGateway, "Управление устройствами")
+Rel(supportGateway, adminService, "Ручное управление")
+Rel(adminService, deviceService, "Управление устройством")
+Rel(adminService, registrationService, "Управление подключением")
+Rel(adminService, houseService, "Управление домами")
+Rel(device, deviceGateway, "Передача телеметрии, регистрация")
+Rel(deviceGateway, telemetryQueue, "Регистрация, Передача телеметрии")
+Rel(gateway, commandQueue, "Управление устройстовом")
+Rel(gateway, deviceService, "регистрация, обновление, сценарии")
+Rel(telemetryQueue, telemetryService, "телеметрия")
+Rel(telemetryQueue, telemetryDb, "")
+Rel(userService, notificationsQueue, "Отправка нотификаций")
+Rel(gateway, userService, "Регистрация\аутентификация\доступы")
+Rel(userService, userDb, "")
+Rel(commandQueue, deviceService, "Задача на устройство")
+Rel(deviceService, deviceDB, "")
+Rel(gateway, houseService, "Мониторинг дома")
+Rel(houseService, telemetryService, "Агрегация данных телеметрии")
+Rel(houseService, houseDb, "")
+Rel(houseService, notificationsQueue, "")
+Rel(registrationService, deviceParametersDb, "")
+Rel(deviceGateway, registrationService, "Регистрация устройства")
+Rel(registrationService, deviceService, "Сохранение нового устройства")
+Rel(notificationsQueue, notificationService, "Отправка нотфификаций")
+Rel(notificationService, notExt, "Отправка нотификаций по выбранным каналам")
+Rel(notificationService, notificationsDB, "")
+Rel(deviceService, device, "IOT Протокол")
+@enduml

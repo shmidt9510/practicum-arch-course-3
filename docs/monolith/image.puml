@@ -1,0 +1,24 @@
+@startuml
+
+title Диаграмма контекстов
+skinparam linetype ortho
+
+
+!include <C4/C4_Component>
+
+Person(support, "Поддержка", "Настройка оборудования")
+Person(client, "Клиент", "Пользователь системы Умный Дом")
+
+System(server, "Умный дом", "управление датчиком температуры и отопления")
+System_Boundary(house, "Дом") {
+    System_Ext(temp, "Датчик температуры", "")
+    System_Ext(control, "Управление температурой", "")
+}
+
+Rel(client, server, "Просмотр и управление")
+Rel(support, house, "Обслуживание датчиков в доме")
+Rel(support, house, "Подключение дома")
+Rel(server, temp, "получает значения температуры от")
+Rel(server, control, "управляет отоплением")
+
+@enduml
