@@ -1,0 +1,37 @@
+@startuml
+
+title Диаграмма компонент
+
+top to bottom direction
+skinparam linetype ortho
+
+!include <C4/C4_Component>
+
+System_Ext(telemetryApi, "API телеметрии", "Kong")
+System_Ext(deviceApi, "Сервис устройств", "Spring")
+System_Ext(userGateway, "User API", "Kong")
+ContainerQueue(commandQueue, "управление устройствами", "Kafka")
+ContainerQueue(notificationsQueue, "очередь для нотификаций", "Kafka")
+System_Boundary(smartHome, "Сервис управления домом", "Container") #LightGrey  {
+    Container(balancer, "Балансировщик", "Nginx")
+    Container(orchestrator, "Оркестратор", "k8s")
+    Container(houseService, "Компонента получения данных о доме", "Spring")
+    Container(notificationService, "Компонента нотификаций о событиях в доме", "Spring")
+    Container(monitoringLogic, "Компонента мониторинга", "Spring")
+    Container(houseInfo, "Компонент информации о доме", "Spring")
+    Container(deviceSercice, "Компонента управления устройствами", "Spring")
+    ContainerDb(houseDb, "База данных домов", "Pg")
+}
+Rel(balancer, orchestrator, "REST")
+Rel(orchestrator, monitoringLogic, "REST")
+Rel(orchestrator, houseInfo, "REST")
+Rel(orchestrator, deviceSercice, "REST")
+Rel(orchestrator, houseService, "REST")
+Rel(orchestrator, notificationService, "REST")
+Rel(userGateway, balancer, "REST")
+Rel(monitoringLogic, telemetryApi, "REST", "Обработка данных телеметрии")
+Rel(houseService, houseDb, "")
+Rel(notificationService, notificationsQueue, "REST", "Нотификации от устройств")
+Rel(deviceApi, notificationService, "REST")
+Rel(deviceSercice, commandQueue, "REST")
+@enduml
