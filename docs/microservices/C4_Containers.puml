@@ -1,0 +1,41 @@
+@startuml
+!include <C4/C4_Container>
+
+skinparam linetype ortho
+
+Person(client, "Клиент", "Взаимодействие с фронтендом")
+
+System_Boundary(system, "Умный дом") {
+    Container(frontend, "Фронтенд", "Web/App etc.")
+    Container(gateway, "API Gateway")
+
+    Container(kafka, "Kafka", "Брокер Сообщений", "Участвует в асинхронных передачах данных")
+
+    Container_Boundary(services, "Сервисы") #LightBlue {
+        Container(userService, "Управление пользователям", "Java\Spring", "регистрация\авторизация\хранение ПД")
+        Container(telemetryService, "Управление телеметрией", "Java\Spring", "Сбор и обработка данных, их визуализация")
+        Container(deviceService, "Управление устройством", "Java\Spring", "Передача команд, считываение команд, выполнение сценариев")
+        Container(houseService, "Управление домом", "Java\Spring", "Оркестрация устройств")
+    }
+
+    ContainerDb(relDb, "Реляционная БД", "PostgreSQL")
+    ContainerDb(telemetryDb, "БД телеметрии", "OLAP", "Обрабатывает и хранит телеметрию")
+}
+
+System_Ext(device, "Устройство")
+
+Rel(client, frontend, "тык")
+Rel(device, kafka, "Публикация события")
+Rel(deviceService, device, "Управление устройством")
+Rel(frontend, gateway, "Команды из фронтенда", "REST")
+Rel(gateway, houseService, "Управление домом")
+Rel(kafka, telemetryService, "Чтение данных")
+Rel(houseService, deviceService, "LifeCheck, отправка команд")
+Rel(houseService, telemetryService, "Обработка сигналов с устройств")
+
+Rel(userService, relDb, "")
+Rel(deviceService, relDb, "")
+Rel(houseService, relDb, "")
+Rel(telemetryService, relDb, "")
+Rel(telemetryService, telemetryDb, "")
+@enduml

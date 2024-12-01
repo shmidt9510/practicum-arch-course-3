@@ -1,0 +1,37 @@
+@startuml
+
+entity "User" {
+    *id: uuid
+    *username: string
+    *created_at: datetime
+}
+
+entity "House" {
+    *id: uuid
+    *user_id: uuid
+    *created_at: datetime
+    *meta: Meta
+}
+
+entity "Device" {
+    *id: uuid
+    *house_id: uuid
+    *serial: uuid
+    *created_at: datetime
+    *type: DeviceType
+    *status: Status
+}
+
+entity "TelemetryData" {
+    *id: uuid
+    *created_at: datetime
+    *source_id: uuid
+    *event_data: string
+}
+
+User ||--o{ House : "0..*"
+House ||--o{ Device : "0..*"
+
+House ||--o{ TelemetryData : ".*"
+
+@enduml
